@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
- <title>GTEST Exam & Study Portal</title>
+  <title>GTEST Exam & Study Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,7 +48,7 @@
             <img id="headerAvatarImg" src="" alt="" class="w-full h-full object-cover hidden">
             <span id="headerAvatarFallback">👤</span>
           </div>
-          <span id="headerStudentName" class="max-w-[110px] sm:max-w-[140px] truncate">Student Profile</span>
+          <span id="headerStudentName" class="max-w-[110px] sm:max-w-[140px] truncate">Set Profile</span>
         </button>
       </div>
     </div>
@@ -419,7 +419,7 @@
 
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1">Student Full Name *</label>
-          <input type="text" id="inputStudentName" placeholder="Jaise: Tushar Kumar" class="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          <input type="text" id="inputStudentName" placeholder="Jaise: Student Name" class="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none">
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1">Email ID *</label>
@@ -459,7 +459,17 @@
     const FIREBASE_BASE_URL = 'https://ctet-sst-portal-default-rtdb.firebaseio.com';
     let uploadedBase64Photo = '';
 
-    // ZERO HARDCODED DATA: Ekdum fresh state start hogi
+    // UNIQUE DEVICE / STUDENT IDENTIFIER
+    function getStudentUID() {
+      let uid = localStorage.getItem('gtest_student_uid');
+      if (!uid) {
+        uid = 'std_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
+        localStorage.setItem('gtest_student_uid', uid);
+      }
+      return uid;
+    }
+
+    // ZERO HARDCODED DATA
     let APP_DATA = JSON.parse(localStorage.getItem('ctet_admin_app_data') || '{}');
     let NOTES_BANK = JSON.parse(localStorage.getItem('ctet_admin_notes') || '[]');
     let QUESTION_BANK = JSON.parse(localStorage.getItem('ctet_admin_questions') || '[]');
@@ -483,14 +493,20 @@
       }
     }
 
-    /* CLOUD SYNC: TEST COMPLETION & SCORES -> FIREBASE (NON-BLOCKING) */
+    /* CLOUD SYNC: TEST COMPLETION & SCORES TO FIREBASE UNDER STUDENT'S OWN BUCKET */
     function markTestCompleted(testKey, scoreInfo) {
       if (!testKey) return;
       scoreInfo = scoreInfo || {};
       const data = getCompletedTests();
+      const studentUid = getStudentUID();
+      const profile = getStudentProfile();
       
       const record = {
         completed: true,
+        studentUid: studentUid,
+        studentName: profile.name || 'Anonymous Student',
+        studentMobile: profile.mobile || 'N/A',
+        studentEmail: profile.email || 'N/A',
         testTitle: activeTest.title || testKey,
         score: scoreInfo.score || 0,
         total: scoreInfo.total || 0,
@@ -508,13 +524,19 @@
         localStorage.setItem('ctet_completed_tests', JSON.stringify(data));
       } catch (e) {}
 
-      // Background Cloud Sync - Never blocks the UI
-      fetch(FIREBASE_BASE_URL + '/completed_tests/' + testKey + '.json', {
+      // Save under student specific record for admin tracking
+      fetch(FIREBASE_BASE_URL + '/students/' + studentUid + '/completed_tests/' + testKey + '.json', {
         method: 'PUT',
         body: JSON.stringify(record)
       }).catch(function(err) {
-        console.warn('Could not sync score to cloud:', err);
+        console.warn('Could not sync student score:', err);
       });
+
+      // Keep root completed_tests updated as reference without blocking
+      fetch(FIREBASE_BASE_URL + '/completed_tests/' + testKey + '.json', {
+        method: 'PUT',
+        body: JSON.stringify(record)
+      }).catch(function() {});
     }
 
     function renderCustomStatusBadge(testKey, totalQCount) {
@@ -615,15 +637,15 @@
     /* SYNC STUDENT DATA & ADMIN CONTENT FROM FIREBASE */
     async function syncStudentDataFromFirebase() {
       try {
-        const [appRes, qRes, nRes, tRes, profRes, testRes, sRes, yRes] = await Promise.all([
+        const studentUid = getStudentUID();
+        const [appRes, qRes, nRes, tRes, sRes, yRes, stdProfRes] = await Promise.all([
           fetch(FIREBASE_BASE_URL + '/app_data.json'),
           fetch(FIREBASE_BASE_URL + '/questions.json'),
           fetch(FIREBASE_BASE_URL + '/notes.json'),
           fetch(FIREBASE_BASE_URL + '/timers.json'),
-          fetch(FIREBASE_BASE_URL + '/student_profile.json'),
-          fetch(FIREBASE_BASE_URL + '/completed_tests.json'),
           fetch(FIREBASE_BASE_URL + '/mock_sets.json'),
-          fetch(FIREBASE_BASE_URL + '/pyq_years.json')
+          fetch(FIREBASE_BASE_URL + '/pyq_years.json'),
+          fetch(FIREBASE_BASE_URL + '/students/' + studentUid + '/profile.json')
         ]);
 
         const appD = await appRes.json();
@@ -662,45 +684,13 @@
           localStorage.setItem('ctet_admin_pyq', JSON.stringify(PYQ_YEARS_LIST));
         }
 
-        const profD = await profRes.json();
-        if (profD && profD.name) {
-          localStorage.setItem('ctet_student_profile', JSON.stringify(profD));
+        // Restore ONLY this student's own profile if available in cloud
+        const stdProfD = await stdProfRes.json();
+        if (stdProfD && stdProfD.name) {
+          localStorage.setItem('ctet_student_profile', JSON.stringify(stdProfD));
         }
 
-        const testsD = (await testRes.json()) || {};
-        Object.keys(testsD).forEach(function(testKey) {
-          let currentPool = [];
-          if (testKey.startsWith('mockset_')) {
-            const setNum = Number(testKey.replace('mockset_', ''));
-            currentPool = QUESTION_BANK.filter(function(q) { return Number(q.mockSet) === setNum; });
-          } else if (testKey.startsWith('pyq_')) {
-            const yr = testKey.replace('pyq_', '');
-            currentPool = QUESTION_BANK.filter(function(q) { return String(q.year) === yr; });
-          } else if (testKey.startsWith('chapter_')) {
-            const chId = testKey.replace('chapter_', '');
-            currentPool = QUESTION_BANK.filter(function(q) { return q.chapterId === chId && q.targetType !== 'set' && q.targetType !== 'pyq'; });
-          } else if (testKey.startsWith('quest_')) {
-            const parts = testKey.split('_');
-            const sKey = parts[1];
-            const cNum = parts[2];
-            currentPool = QUESTION_BANK.filter(function(q) {
-              return q.subject === sKey && String(q.class) === String(cNum) && q.targetType !== 'set' && q.targetType !== 'pyq';
-            });
-          }
-
-          if (currentPool.length === 0) {
-            delete testsD[testKey];
-          } else if (testsD[testKey].total !== currentPool.length) {
-            testsD[testKey].total = currentPool.length;
-            if (testsD[testKey].score > currentPool.length) {
-              testsD[testKey].score = currentPool.length;
-            }
-            testsD[testKey].accuracy = Math.round((testsD[testKey].score / currentPool.length) * 100);
-          }
-        });
-
-        localStorage.setItem('ctet_completed_tests', JSON.stringify(testsD));
-        
+        const testsD = getCompletedTests();
         const keys = Object.keys(testsD);
         appState.testsTaken = keys.length;
         let sumAcc = 0;
@@ -719,7 +709,6 @@
       }
     }
 
-    /* REALTIME EVENT SOURCE LISTENER FOR STUDENT APP (AUTO LIVE SYNC) */
     function initStudentRealtimeListeners() {
       try {
         const questionsSource = new EventSource(FIREBASE_BASE_URL + '/questions.json');
@@ -864,6 +853,7 @@
       const email = document.getElementById('inputStudentEmail').value.trim();
       const mobile = document.getElementById('inputStudentMobile').value.trim();
       const btn = document.getElementById('btnSaveProfile');
+      const studentUid = getStudentUID();
 
       if (!name) {
         alert('Kripya apna naam daalein!');
@@ -871,6 +861,7 @@
       }
 
       const profile = { 
+        uid: studentUid,
         name: name, 
         email: email, 
         mobile: mobile, 
@@ -884,11 +875,12 @@
 
       try {
         btn.textContent = 'Saving to Cloud...';
-        await fetch(FIREBASE_BASE_URL + '/student_profile.json', {
+        // Save to this student's dedicated node so other phones don't overwrite
+        await fetch(FIREBASE_BASE_URL + '/students/' + studentUid + '/profile.json', {
           method: 'PUT',
           body: JSON.stringify(profile)
         });
-        alert('Profile Cloud me save ho gayi hai!');
+        alert('Profile safalta-purvak save ho gayi hai!');
       } catch (e) {
         alert('Profile locally save ho gayi hai.');
       } finally {
@@ -1578,7 +1570,7 @@
       document.getElementById('submitModal').classList.add('hidden');
     }
 
-    /* FINAL SUBMISSION WITH NON-BLOCKING CLOUD UPLOAD & INSTANT RESULT POPUP */
+    /* FINAL SUBMISSION - INSTANT POPUP + STUDENT SPECIFIC CLOUD SYNC */
     function finalizeSubmit() {
       closeSubmitModal();
       clearTimerEngine();
@@ -1619,7 +1611,6 @@
       appState.totalScoreSum += pct;
       if (pct > appState.bestPercentage) appState.bestPercentage = pct;
 
-      // Mark locally & trigger cloud upload asynchronously in background
       if (activeTest.testKey) {
         markTestCompleted(activeTest.testKey, {
           score: correct,
