@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GTET • Cloud Admin Panel</title>
+  <title>GTEST • Cloud Admin Panel</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,7 +42,7 @@
       <div class="flex items-center gap-2.5 cursor-pointer" onclick="openModuleHub()">
         <span class="p-2 bg-indigo-600 rounded-xl text-lg">⚙️</span>
         <div>
-          <h1 class="text-base md:text-lg font-bold leading-tight">GTET.com Admin</h1>
+          <h1 class="text-base md:text-lg font-bold leading-tight">GTEST.com Admin</h1>
           <p class="text-[11px] text-emerald-400 font-semibold flex items-center gap-1.5">
             <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
             <span id="cloudStatusText">Instant Sync Active</span>
@@ -96,8 +96,8 @@
         <b id="statQuesCount" class="text-lg font-black text-emerald-600">0</b>
       </div>
       <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
-        <span class="text-[11px] text-slate-500 block">Scorecards</span>
-        <b id="statCompletedTestsCount" class="text-lg font-black text-amber-600">0</b>
+        <span class="text-[11px] text-slate-500 block">Total Students</span>
+        <b id="statStudentsCount" class="text-lg font-black text-amber-600">0</b>
       </div>
     </div>
 
@@ -201,23 +201,23 @@
 
         <div onclick="openWorkspace('tabProfileManagement')" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-violet-500 hover:shadow-md cursor-pointer transition flex flex-col justify-between group">
           <div>
-            <div class="w-11 h-11 bg-violet-50 text-violet-600 rounded-xl flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition">👤</div>
-            <h3 class="font-bold text-slate-800 text-sm">Student Profile & Scores</h3>
-            <p class="text-xs text-slate-500 mt-1">App me student profile aur marks yahan real-time live dikhenge.</p>
+            <div class="w-11 h-11 bg-violet-50 text-violet-600 rounded-xl flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition">👥</div>
+            <h3 class="font-bold text-slate-800 text-sm">Students & Scores</h3>
+            <p class="text-xs text-slate-500 mt-1">Sabhi alag-alag students ke profiles aur test records dekhein.</p>
           </div>
           <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-violet-600">
-            <span>View Live Profile</span> <span>→</span>
+            <span>View All Students</span> <span>→</span>
           </div>
         </div>
 
         <div onclick="openWorkspace('tabStudentRecords')" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-teal-500 hover:shadow-md cursor-pointer transition flex flex-col justify-between group">
           <div>
             <div class="w-11 h-11 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition">🎓</div>
-            <h3 class="font-bold text-slate-800 text-sm">Download Score Card (PDF)</h3>
-            <p class="text-xs text-slate-500 mt-1">Student ke completed tests ki verified marksheet download aur print karein.</p>
+            <h3 class="font-bold text-slate-800 text-sm">Certified Score Cards</h3>
+            <p class="text-xs text-slate-500 mt-1">Student select karein aur certified marksheet download/print karein.</p>
           </div>
           <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-teal-600">
-            <span>Score Cards</span> <span>→</span>
+            <span>Print Scorecards</span> <span>→</span>
           </div>
         </div>
       </div>
@@ -616,17 +616,25 @@
       </div>
     </section>
 
-    <!-- MODULE 9: STUDENT PROFILE & HISTORY MANAGEMENT -->
+    <!-- MODULE 9: MULTI-STUDENT PROFILE & SCORES MANAGEMENT -->
     <section id="tabProfileManagement" class="hidden space-y-4">
       <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
-            <h2 class="text-base font-bold text-slate-800">👤 Student Live Profile & Scores</h2>
-            <p class="text-xs text-slate-500">Student jo bhi app me submit karega wo yahan live dikhega.</p>
+            <h2 class="text-base font-bold text-slate-800">👥 All Registered Students</h2>
+            <p class="text-xs text-slate-500">Sabhi alag-alag phones se aane wale students ka data alag dikhega.</p>
           </div>
-          <button onclick="syncStudentActivityFromCloud(true)" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition">
-            🔄 Refresh From Cloud
+          <button onclick="syncAllStudentsFromCloud(true)" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition">
+            🔄 Refresh Students
           </button>
+        </div>
+
+        <!-- Student Selector Dropdown -->
+        <div class="bg-indigo-50/60 p-4 rounded-xl border border-indigo-200">
+          <label class="block text-xs font-bold text-indigo-900 mb-1.5">Select Student Profile:</label>
+          <select id="adminStudentSelect" onchange="handleStudentSelectChange()" class="w-full p-2.5 bg-white border border-indigo-300 rounded-xl text-xs font-bold text-indigo-950">
+            <option value="">-- Loading Students... --</option>
+          </select>
         </div>
 
         <div id="adminStudentProfileCard" class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-wrap items-center gap-4">
@@ -636,12 +644,12 @@
           </div>
           <div class="space-y-0.5 text-xs">
             <div class="flex items-center gap-2">
-              <h3 id="adminStudentName" class="text-sm font-bold text-slate-900">Not Uploaded Yet</h3>
-              <span id="adminProfileSyncTag" class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-600">Waiting for App</span>
+              <h3 id="adminStudentName" class="text-sm font-bold text-slate-900">No Student Selected</h3>
+              <span id="adminProfileSyncTag" class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-600">Active</span>
             </div>
             <p id="adminStudentEmail" class="text-slate-600">Email: —</p>
             <p id="adminStudentMobile" class="text-slate-600">Mobile: —</p>
-            <p id="adminProfileLastUpdated" class="text-[10px] text-slate-400">Last Synced: —</p>
+            <p id="adminProfileLastUpdated" class="text-[10px] text-slate-400">Student ID: —</p>
           </div>
         </div>
 
@@ -672,7 +680,7 @@
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
           <div>
             <h2 class="text-base font-bold text-slate-800">🎓 Certified Student Score Cards</h2>
-            <p class="text-xs text-slate-500">Student ke sabhi completed tests ka official certificate generate karein.</p>
+            <p class="text-xs text-slate-500">Select kiye hue student ke test scores download aur print karein.</p>
           </div>
           <button onclick="renderStudentRecords()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition">
             🔄 Refresh Records
@@ -687,7 +695,7 @@
   <!-- PRINT SCORE CARD -->
   <div id="adminPrintScoreCard" class="hidden bg-white text-slate-900 border-2 border-slate-800 p-6 rounded-xl">
     <div class="text-center border-b-2 border-indigo-900 pb-3 mb-3">
-      <h1 class="text-xl font-black text-indigo-950 uppercase">CTET SST OFFICIAL SCORE CARD</h1>
+      <h1 class="text-xl font-black text-indigo-950 uppercase">GTEST OFFICIAL SCORE CARD</h1>
       <p class="text-[11px] font-semibold text-slate-600">Verified Central Exam Control Portal Record</p>
     </div>
 
@@ -706,7 +714,7 @@
       <div class="text-right space-y-0.5">
         <div><strong>Exam / Test:</strong> <span id="printCardTestTitle" class="text-indigo-900 font-bold">—</span></div>
         <div><strong>Attempt Date:</strong> <span id="printCardDate">—</span></div>
-        <div><strong>Certificate ID:</strong> #CTET-<span id="printCardId">1001</span></div>
+        <div><strong>Certificate ID:</strong> #GTEST-<span id="printCardId">1001</span></div>
       </div>
     </div>
 
@@ -740,7 +748,7 @@
     </div>
 
     <div class="pt-3 border-t border-slate-300 flex items-center justify-between text-[10px] text-slate-500">
-      <span>Verified by CTET Exam Control Portal</span>
+      <span>Verified by GTEST Exam Control Portal</span>
       <span>Single-Page Certified Official Document</span>
     </div>
   </div>
@@ -755,17 +763,19 @@
     let testTimersMap = JSON.parse(localStorage.getItem('ctet_admin_timers') || '{}');
     let mockSetsList = JSON.parse(localStorage.getItem('ctet_admin_sets') || '[]');
     let pyqYearsList = JSON.parse(localStorage.getItem('ctet_admin_pyq') || '[]');
-    let studentProfile = JSON.parse(localStorage.getItem('ctet_student_profile') || '{"name":"","email":"","mobile":"","photo":""}');
-    let completedTestsMap = JSON.parse(localStorage.getItem('ctet_completed_tests') || '{}');
+
+    // MULTI-STUDENT STRUCTURE
+    let allStudentsMap = JSON.parse(localStorage.getItem('gtest_all_students') || '{}');
+    let currentSelectedStudentUid = '';
     let parsedTempQuestions = [];
 
     const workspaceTitles = {
       'tabAddQ': '➕ Upload Question (Set / PYQ / Chapter)',
-      'tabPdfParser': '⚡ Auto Parse CTET Questions',
+      'tabPdfParser': '⚡ Auto Parse Exam Questions',
       'tabManageQ': '📋 Manage Questions Bank',
       'tabManageSets': '🎯 Manage Mock Sets',
       'tabManagePyq': '📅 Manage PYQ Papers',
-      'tabProfileManagement': '👤 Student Live Profile & Scores',
+      'tabProfileManagement': '👥 Students Live Profiles & Scores',
       'tabStudentRecords': '🎓 Student Score Cards',
       'tabManageNotes': '📑 Manage Chapter PDF Notes',
       'tabAddSubject': '📚 Manage Subjects',
@@ -783,12 +793,12 @@
     syncChannel.onmessage = function(e) {
       if (e.data && e.data.type) {
         if (e.data.type === 'profile' || e.data.type === 'test_submitted') {
-          syncStudentActivityFromCloud(false);
+          syncAllStudentsFromCloud(false);
         }
       }
     };
 
-    /* FETCH AND MERGE SAFELY WITHOUT WIPING LOCAL CACHE */
+    /* FETCH ADMIN CORE CONTENT */
     async function syncAdminDataFromCloud() {
       try {
         const [appRes, qRes, nRes, tRes, sRes, yRes] = await Promise.all([
@@ -835,44 +845,85 @@
           pyqYearsList = Array.isArray(yData) ? yData.filter(Boolean) : Object.values(yData);
           localStorage.setItem('ctet_admin_pyq', JSON.stringify(pyqYearsList));
         }
-
       } catch (e) {
         console.warn('Admin core sync issue:', e);
       }
     }
 
-    async function syncStudentActivityFromCloud(notify) {
+    /* FETCH ALL UNIQUE STUDENTS FROM CLOUD */
+    async function syncAllStudentsFromCloud(notify) {
       try {
-        const pRes = await fetch(FIREBASE_BASE_URL + '/student_profile.json');
-        const pData = await pRes.json();
-        if (pData && (pData.name || pData.email || pData.photo)) {
-          studentProfile = pData;
-          localStorage.setItem('ctet_student_profile', JSON.stringify(studentProfile));
-        }
+        const stdRes = await fetch(FIREBASE_BASE_URL + '/students.json');
+        const stdData = await stdRes.json();
 
-        const cRes = await fetch(FIREBASE_BASE_URL + '/completed_tests.json');
-        const cData = await cRes.json();
-        if (cData !== null && typeof cData === 'object') {
-          completedTestsMap = cData;
-          localStorage.setItem('ctet_completed_tests', JSON.stringify(completedTestsMap));
+        if (stdData !== null && typeof stdData === 'object') {
+          allStudentsMap = stdData;
+          localStorage.setItem('gtest_all_students', JSON.stringify(allStudentsMap));
+        } else {
+          // Backward compatibility check for legacy single profile
+          const legacyPRes = await fetch(FIREBASE_BASE_URL + '/student_profile.json');
+          const legacyP = await legacyPRes.json();
+          const legacyCRes = await fetch(FIREBASE_BASE_URL + '/completed_tests.json');
+          const legacyC = await legacyCRes.json();
+
+          if (legacyP && legacyP.name) {
+            allStudentsMap['primary_user'] = {
+              profile: legacyP,
+              completed_tests: legacyC || {}
+            };
+            localStorage.setItem('gtest_all_students', JSON.stringify(allStudentsMap));
+          }
         }
 
         updateStatsUI();
+        populateStudentSelectDropdown();
         renderProfileManagement();
         renderStudentRecords();
 
         if (notify) {
-          showLiveAlert('Sync Complete', 'Student profile aur score sync ho gaye.');
+          showLiveAlert('Sync Complete', 'Sabhi students aur scores sync ho gaye.');
         }
       } catch (err) {
         console.warn('Student sync issue:', err);
       }
     }
 
+    function populateStudentSelectDropdown() {
+      const select = document.getElementById('adminStudentSelect');
+      if (!select) return;
+
+      const uids = Object.keys(allStudentsMap || {});
+      if (uids.length === 0) {
+        select.innerHTML = '<option value="">-- No Student Has Registered Yet --</option>';
+        currentSelectedStudentUid = '';
+        return;
+      }
+
+      if (!currentSelectedStudentUid || !allStudentsMap[currentSelectedStudentUid]) {
+        currentSelectedStudentUid = uids[0];
+      }
+
+      select.innerHTML = uids.map(function(uid) {
+        const s = allStudentsMap[uid] || {};
+        const p = s.profile || {};
+        const name = p.name || 'Student (' + uid.substring(0, 8) + ')';
+        const mobile = p.mobile ? ' - ' + p.mobile : '';
+        const isSel = uid === currentSelectedStudentUid ? 'selected' : '';
+        return '<option value="' + uid + '" ' + isSel + '>' + name + mobile + '</option>';
+      }).join('');
+    }
+
+    function handleStudentSelectChange() {
+      const select = document.getElementById('adminStudentSelect');
+      currentSelectedStudentUid = select.value;
+      renderProfileManagement();
+      renderStudentRecords();
+    }
+
     async function refreshAllFromCloud(manual) {
       document.getElementById('cloudStatusText').textContent = 'Syncing...';
       await syncAdminDataFromCloud();
-      await syncStudentActivityFromCloud(false);
+      await syncAllStudentsFromCloud(false);
       updateStatsUI();
       updateAllDropdowns();
       renderSubjectCards();
@@ -887,29 +938,18 @@
 
     function initRealtimeCloudListeners() {
       try {
-        const testsEventSource = new EventSource(FIREBASE_BASE_URL + '/completed_tests.json');
-        testsEventSource.addEventListener('put', function(e) {
+        const studentsSource = new EventSource(FIREBASE_BASE_URL + '/students.json');
+        studentsSource.addEventListener('put', function(e) {
           if (!e.data) return;
           const payload = JSON.parse(e.data);
-          if (payload && payload.data) {
-            completedTestsMap = payload.data;
-            localStorage.setItem('ctet_completed_tests', JSON.stringify(completedTestsMap));
+          if (payload && payload.data !== undefined) {
+            allStudentsMap = payload.data || {};
+            localStorage.setItem('gtest_all_students', JSON.stringify(allStudentsMap));
             updateStatsUI();
+            populateStudentSelectDropdown();
             renderProfileManagement();
             renderStudentRecords();
-            showLiveAlert('New Test Completed! 🎯', 'Student ne ek test submit kiya hai.');
-          }
-        });
-
-        const profileEventSource = new EventSource(FIREBASE_BASE_URL + '/student_profile.json');
-        profileEventSource.addEventListener('put', function(e) {
-          if (!e.data) return;
-          const payload = JSON.parse(e.data);
-          if (payload && payload.data) {
-            studentProfile = payload.data;
-            localStorage.setItem('ctet_student_profile', JSON.stringify(studentProfile));
-            renderProfileManagement();
-            renderStudentRecords();
+            showLiveAlert('Student Activity! 🎯', 'Naya student record update hua hai.');
           }
         });
       } catch (err) {
@@ -992,7 +1032,7 @@
       document.getElementById('hubQCount').textContent = questionsList.length;
       document.getElementById('statSetsCount').textContent = mockSetsList.length;
       document.getElementById('statPyqCount').textContent = pyqYearsList.length;
-      document.getElementById('statCompletedTestsCount').textContent = Object.keys(completedTestsMap || {}).length;
+      document.getElementById('statStudentsCount').textContent = Object.keys(allStudentsMap || {}).length;
     }
 
     function openWorkspace(tabId, pushHistory) {
@@ -1017,7 +1057,10 @@
       }
 
       if (tabId === 'tabStudentRecords') renderStudentRecords();
-      if (tabId === 'tabProfileManagement') renderProfileManagement();
+      if (tabId === 'tabProfileManagement') {
+        populateStudentSelectDropdown();
+        renderProfileManagement();
+      }
       if (tabId === 'tabManageNotes') renderNotesList();
       if (tabId === 'tabManageQ') renderQuestionsList();
       if (tabId === 'tabManageSets') renderMockSetsList();
@@ -1268,7 +1311,6 @@
       mockSetsList.splice(idx, 1);
       questionsList = questionsList.filter(q => Number(q.mockSet) !== Number(setObj.setNum));
       delete testTimersMap['mockset_' + setObj.setNum];
-      delete completedTestsMap['mockset_' + setObj.setNum];
 
       renderMockSetsList();
       renderQuestionsList();
@@ -1336,7 +1378,6 @@
       pyqYearsList.splice(idx, 1);
       questionsList = questionsList.filter(q => String(q.year) !== String(pyqObj.year));
       delete testTimersMap['pyq_' + pyqObj.year];
-      delete completedTestsMap['pyq_' + pyqObj.year];
 
       renderPyqList();
       renderQuestionsList();
@@ -1488,7 +1529,6 @@
         questionsList = questionsList.filter(q => q.chapterId !== chId);
         notesList = notesList.filter(n => n.chapterId !== chId);
         delete testTimersMap['chapter_' + chId];
-        delete completedTestsMap['chapter_' + chId];
 
         renderAllChaptersList();
         renderQuestionsList();
@@ -1723,12 +1763,10 @@
     async function handleDeleteAllQuestions() {
       if (confirm('Saare prashn Cloud se delete ho jayenge. Confirm karein?')) {
         questionsList = [];
-        completedTestsMap = {};
         renderStudentRecords();
         renderProfileManagement();
         renderQuestionsList();
         await saveQuestionsToCloud();
-        fetch(FIREBASE_BASE_URL + '/completed_tests.json', { method: 'DELETE' }).catch(() => {});
       }
     }
 
@@ -1785,12 +1823,16 @@
       }
     }
 
-    /* PROFILE & CERTIFICATES */
+    /* PROFILE & CERTIFICATES FOR CURRENT SELECTED STUDENT */
     function renderProfileManagement() {
-      const p = studentProfile || {};
-      document.getElementById('adminStudentName').textContent = p.name || 'No Student Profile Yet';
+      const currentStudent = allStudentsMap[currentSelectedStudentUid] || {};
+      const p = currentStudent.profile || {};
+      const completedTests = currentStudent.completed_tests || {};
+
+      document.getElementById('adminStudentName').textContent = p.name || 'No Student Selected';
       document.getElementById('adminStudentEmail').textContent = 'Email: ' + (p.email || '—');
       document.getElementById('adminStudentMobile').textContent = 'Mobile: ' + (p.mobile || '—');
+      document.getElementById('adminProfileLastUpdated').textContent = currentSelectedStudentUid ? 'ID: ' + currentSelectedStudentUid : 'Student ID: —';
 
       const imgEl = document.getElementById('adminProfileImg');
       const placeholderEl = document.getElementById('adminProfileImgPlaceholder');
@@ -1804,8 +1846,8 @@
       }
 
       let setsHtml = '', pyqHtml = '', chapHtml = '', questHtml = '';
-      Object.keys(completedTestsMap || {}).forEach(function(k) {
-        const item = completedTestsMap[k];
+      Object.keys(completedTests || {}).forEach(function(k) {
+        const item = completedTests[k];
         const row = '<div class="p-2 bg-white rounded-lg border border-slate-200 flex justify-between">' +
                     '<span class="font-semibold truncate max-w-[130px]">' + (item.testTitle || k) + '</span>' +
                     '<strong class="text-indigo-700">' + item.score + '/' + item.total + ' (' + item.accuracy + '%)</strong></div>';
@@ -1824,14 +1866,18 @@
     function renderStudentRecords() {
       const cont = document.getElementById('studentRecordsContainer');
       if (!cont) return;
-      const testKeys = Object.keys(completedTestsMap || {});
+
+      const currentStudent = allStudentsMap[currentSelectedStudentUid] || {};
+      const completedTests = currentStudent.completed_tests || {};
+      const testKeys = Object.keys(completedTests || {});
+
       if (testKeys.length === 0) {
-        cont.innerHTML = '<div class="p-8 text-center text-slate-400 text-xs">Student ne abhi tak koi test submit nahi kiya hai.</div>';
+        cont.innerHTML = '<div class="p-8 text-center text-slate-400 text-xs">Is student ne abhi tak koi test submit nahi kiya hai.</div>';
         return;
       }
 
       cont.innerHTML = testKeys.map(function(k) {
-        const item = completedTestsMap[k];
+        const item = completedTests[k];
         return '<div class="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between text-xs">' +
                '<div><b class="text-xs text-indigo-900 block">' + (item.testTitle || k) + '</b>' +
                '<div class="flex items-center gap-3 mt-1 text-slate-600 font-medium">' +
@@ -1843,8 +1889,10 @@
     }
 
     function downloadCertifiedScoreCard(testKey) {
-      const p = studentProfile || {};
-      const record = (completedTestsMap && completedTestsMap[testKey]) ? completedTestsMap[testKey] : {};
+      const currentStudent = allStudentsMap[currentSelectedStudentUid] || {};
+      const p = currentStudent.profile || {};
+      const completedTests = currentStudent.completed_tests || {};
+      const record = completedTests[testKey] || {};
 
       document.getElementById('printCardName').textContent = p.name || 'Student Candidate';
       document.getElementById('printCardEmail').textContent = p.email || 'N/A';
@@ -1869,7 +1917,7 @@
       }
 
       let setAttempts = 0, pyqAttempts = 0, chapAttempts = 0, questAttempts = 0;
-      Object.keys(completedTestsMap || {}).forEach(function(k) {
+      Object.keys(completedTests || {}).forEach(function(k) {
         if (k.startsWith('mockset_')) setAttempts++;
         else if (k.startsWith('pyq_')) pyqAttempts++;
         else if (k.startsWith('quest_')) questAttempts++;
@@ -1894,6 +1942,7 @@
         renderAllChaptersList();
         renderNotesList();
         renderQuestionsList();
+        populateStudentSelectDropdown();
         renderProfileManagement();
 
         await refreshAllFromCloud(false);
